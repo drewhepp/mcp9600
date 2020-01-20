@@ -14,7 +14,7 @@ pub mod mcp9600 {
             const filter_coeffs : FilterCoefficients = 2;
 
             let i2c = I2cMock::new();
-            let i2c_manager = shared_bus::BusManager::<std::sync::Mutex<_>, _>::new(i2c);
+            let i2c_manager = shared_bus::StdBusManager::new(i2c);
             
             let mcp9600 = Mcp9600::new(i2c_manager.acquire(), thermo_type, filter_coeffs);
 
@@ -28,7 +28,7 @@ pub mod mcp9600 {
             const filter_coeffs : FilterCoefficients = 2;
 
             let i2c = I2cMock::new();
-            let i2c_manager = shared_bus::BusManager::<std::sync::Mutex<_>, _>::new(i2c);
+            let i2c_manager = shared_bus::StdBusManager::new(i2c);
             let mcp9600 = Mcp9600::new(i2c_manager.acquire(), thermo_type, filter_coeffs);
 
             let i2c_mock_handle = i2c_manager.acquire();
@@ -49,13 +49,13 @@ pub mod mcp9600 {
             impl hal::blocking::i2c::Write for I2cMock {
                 type Error = Error;
                 fn write(&mut self, addr: u8, bytes: &[u8]) -> Result<(), Self::Error> {
-                    Err(Error::Generic);
+                    Err(Error::Generic)
                 }
             }
             impl hal::blocking::i2c::Read for I2cMock {
                 type Error = Error;
                 fn read(&mut self, addr: u8, bytes: &mut [u8]) -> Result<(), Self::Error> {
-                    Err(Error::Generic);
+                    Err(Error::Generic)
                 }
             }
             impl I2cMock {
