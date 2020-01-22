@@ -4,7 +4,7 @@ pub trait MemoryAddressReader {
     fn read(&self, idx: u8, bytes: &mut [u8]);
 }
 pub trait MemoryAddressWriter {
-    fn write(&self, idx: u8, bytes: &[u8]);
+    fn write(&mut self, idx: u8, bytes: &[u8]);
 }
 
 pub struct RegisterFile<T> {
@@ -27,30 +27,39 @@ impl<T> MemoryAddressReader for RegisterFile<T> {
     }
 }
 impl<T> MemoryAddressWriter for RegisterFile<T> {
-    fn write(&self, idx: u8, bytes: &[u8]) {
+    fn write(&mut self, idx: u8, bytes: &[u8]) {
         // TODO
         return;
     }
 }
 
 pub struct RegisterFileFake {
-    mem: [u32; 256],
+    mem: [[u8; 4]; 256],
 }
 impl RegisterFileFake {
     pub fn new() -> RegisterFileFake {
         RegisterFileFake {
-            mem: [0; 256],
+            mem: [[0; 4]; 256],
         }
     }
 }
 impl MemoryAddressReader for RegisterFileFake {
     fn read(&self, idx: u8, bytes: &mut [u8]) {
+        for i in 0..bytes.len() {
+            bytes[i] = self.mem[idx as usize][i]
+        }
+        println!("read {:?} from {:?}", self.mem[idx as usize], idx);
+        println!("bytes coming back as {:?}", bytes);
+
     }
 }
 impl MemoryAddressWriter for RegisterFileFake {
-    fn write(&self, idx: u8, bytes: &[u8]) {
-        // TODO
-        return;
+    fn write(&mut self, idx: u8, bytes: &[u8]) {
+        for i in 0..bytes.len() {
+            self.mem[idx as usize][i] = bytes[i];
+        }
+        println!("wrote {:?} to {:?}", bytes, idx);
+        println!("mem now reads {:?}", self.mem[idx as usize]);
     }
 }
 
@@ -60,8 +69,10 @@ mod tests {
 
     #[test]
     fn read_generates_correct_i2c_traffic() {
+        // TODO
     }
     #[test]
     fn write_generates_correct_i2c_traffic() {
+        // TODO
     }
 }

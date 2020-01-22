@@ -25,7 +25,7 @@ struct Mcp9600<T> {
 impl<T> Mcp9600<T>
 where T: MemoryAddressReader + MemoryAddressWriter {
     pub fn new(registers: T, thermo_type: ThermocoupleType, filter_coeffs: FilterCoefficients) -> Mcp9600<T> {
-        let mcp9600 = Mcp9600 {
+        let mut mcp9600 = Mcp9600 {
             registers,
         };
 
@@ -50,7 +50,7 @@ where T: MemoryAddressReader + MemoryAddressWriter {
     pub fn read_temp(&self) -> Temperature {
         let mut buffer: [u8; 2] = [0; 2];
         self.registers.read(REG_HOT_JUNC_TEMP, &mut buffer);
-        let temp: Temperature = (buffer[0] as u16) | ((buffer[1] as u16) << 8);
+        let temp = u16::from_be_bytes(buffer);
         return temp;
     }
 }
@@ -84,11 +84,11 @@ mod tests {
         let thermo_type = ThermocoupleType::TypeK;
         let filter_coeffs = FilterCoefficients::FullFilter;
 
-        let mcp9600 = Mcp9600::new(registers, thermo_type, filter_coeffs);
+        let mut mcp9600 = Mcp9600::new(registers, thermo_type, filter_coeffs);
 
         let mut buffer: [u8; 1] = [0; 1];
         mcp9600.registers.read(REG_THERMO_CFG, &mut buffer);
-        assert!(buffer[0] == 0b00000111);
+        assert_eq!(buffer[0], 0b00000111);
     }
 
     #[test]
@@ -98,12 +98,12 @@ mod tests {
         let thermo_type = ThermocoupleType::TypeK;
         let filter_coeffs = FilterCoefficients::FullFilter;
 
-        let mcp9600 = Mcp9600::new(registers, thermo_type, filter_coeffs);
+        let mut mcp9600 = Mcp9600::new(registers, thermo_type, filter_coeffs);
 
         let temp_in : u16 = 0x12;
         mcp9600.registers.write(REG_HOT_JUNC_TEMP, &temp_in.to_be_bytes());
 
         let temp_out = mcp9600.read_temp();
-        assert!(temp_out == temp_in);
+        assert_eq!(temp_out, temp_in);
     }
 }
