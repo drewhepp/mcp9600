@@ -1,7 +1,7 @@
 extern crate embedded_hal as hal;
 
 pub trait MemoryAddressReader {
-    fn read(&self, idx: u8, bytes: &mut [u8]);
+    fn read(&mut self, idx: u8, bytes: &mut [u8]); // TODO I don't like that this is mut
 }
 pub trait MemoryAddressWriter {
     fn write(&mut self, idx: u8, bytes: &[u8]);
@@ -12,7 +12,7 @@ pub struct RegisterFile<T> {
     i2c_addr: u8,
 }
 impl<T> RegisterFile<T>
-where T: hal::blocking::i2c::Write + hal::blocking::i2c::Read + hal::blocking::i2c::WriteRead {
+where T: hal::blocking::i2c::Write + hal::blocking::i2c::WriteRead {
     pub fn new(i2c_bus: T, i2c_addr: u8) -> RegisterFile<T> {
         RegisterFile {
             i2c_bus,
@@ -20,16 +20,17 @@ where T: hal::blocking::i2c::Write + hal::blocking::i2c::Read + hal::blocking::i
         }
     }
 }
-impl<T> MemoryAddressReader for RegisterFile<T> {
-    fn read(&self, idx: u8, bytes: &mut [u8]) {
-        // TODO
-        return;
+impl<T> MemoryAddressReader for RegisterFile<T>
+where T: hal::blocking::i2c::Write + hal::blocking::i2c::WriteRead {
+    fn read(&mut self, idx: u8, bytes: &mut [u8]) {
+        self.i2c_bus.write_read(self.i2c_addr, &[idx], bytes);
     }
 }
-impl<T> MemoryAddressWriter for RegisterFile<T> {
+impl<T> MemoryAddressWriter for RegisterFile<T>
+where T: hal::blocking::i2c::Write + hal::blocking::i2c::WriteRead {
     fn write(&mut self, idx: u8, bytes: &[u8]) {
-        // TODO
-        return;
+        self.i2c_bus.write(self.i2c_addr, &[idx]); // TODO make this atomic?
+        self.i2c_bus.write(self.i2c_addr, bytes);
     }
 }
 
@@ -44,12 +45,12 @@ impl RegisterFileFake {
     }
 }
 impl MemoryAddressReader for RegisterFileFake {
-    fn read(&self, idx: u8, bytes: &mut [u8]) {
+    fn read(&mut self, idx: u8, bytes: &mut [u8]) {
         for i in 0..bytes.len() {
             bytes[i] = self.mem[idx as usize][i]
         }
-        println!("read {:?} from {:?}", self.mem[idx as usize], idx);
-        println!("bytes coming back as {:?}", bytes);
+//        println!("read {:?} from {:?}", self.mem[idx as usize], idx);
+//        println!("bytes coming back as {:?}", bytes);
 
     }
 }
@@ -58,8 +59,8 @@ impl MemoryAddressWriter for RegisterFileFake {
         for i in 0..bytes.len() {
             self.mem[idx as usize][i] = bytes[i];
         }
-        println!("wrote {:?} to {:?}", bytes, idx);
-        println!("mem now reads {:?}", self.mem[idx as usize]);
+//        println!("wrote {:?} to {:?}", bytes, idx);
+//        println!("mem now reads {:?}", self.mem[idx as usize]);
     }
 }
 

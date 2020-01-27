@@ -1,3 +1,5 @@
+#![no_std]
+
 extern crate embedded_hal as hal;
 
 mod register_file;
@@ -47,7 +49,7 @@ where T: MemoryAddressReader + MemoryAddressWriter {
         return mcp9600;
     }
 
-    pub fn read_temp(&self) -> Temperature {
+    pub fn read_temp(&mut self) -> Temperature {
         let mut buffer: [u8; 2] = [0; 2];
         self.registers.read(REG_HOT_JUNC_TEMP, &mut buffer);
         let temp = u16::from_be_bytes(buffer);
